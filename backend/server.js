@@ -1,6 +1,11 @@
 const express = require('express');
 const app = express();
 
+const connectDB = require('./database/db');
+connectDB();
+
+const User = require('./database/User');
+
 const router = express.Router();
 const userController = require('./controllers/userController');
 
