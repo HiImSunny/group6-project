@@ -1,10 +1,14 @@
 const express = require('express');
 const app = express();
 
-const connectDB = require('./database/db');
-connectDB();
+const mongoose = require('mongoose');
+require('dotenv').config();
 
-const User = require('./database/User');
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+}).then(() => console.log('MongoDB connected'))
+  .catch(err => console.error('MongoDB connection error:', err));
 
 const router = express.Router();
 const userController = require('./controllers/userController');
