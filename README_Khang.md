@@ -1,1 +1,2 @@
-Lương Duy Khang: Backend (Node.js + Express)
+Lương Duy Khang: Frontend (React)
+
