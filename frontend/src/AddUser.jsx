@@ -5,37 +5,25 @@ function AddUser({ onUserAdded }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const newUser = { name, email };
+    if (!name || !email) return alert("Vui lòng nhập đầy đủ!");
 
-    axios.post('http://localhost:3000/api/users', newUser)
-      .then(res => {
-        onUserAdded(res.data); // Thông báo cho component cha
-        setName('');
-        setEmail('');
-      })
-      .catch(err => console.error(err));
+    try {
+      const res = await axios.post('http://localhost:3000/users', { name, email });
+      onUserAdded(res.data);
+      setName('');
+      setEmail('');
+    } catch (err) {
+      console.error("Lỗi thêm user:", err);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit}>
-      <h3>Thêm User Mới</h3>
-      <input 
-        type="text" 
-        placeholder="Tên" 
-        value={name} 
-        onChange={e => setName(e.target.value)} 
-        required 
-      />
-      <input 
-        type="email" 
-        placeholder="Email" 
-        value={email} 
-        onChange={e => setEmail(e.target.value)} 
-        required 
-      />
-      <button type="submit">Thêm</button>
+      <input type="text" placeholder="Tên" value={name} onChange={e => setName(e.target.value)} required />
+      <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required />
+      <button type="submit">Thêm người dùng</button>
     </form>
   );
 }
