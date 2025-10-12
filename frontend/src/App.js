@@ -1,37 +1,41 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import AddUser from "./AddUser";
-import UserList from "./UserList";
 
 function App() {
   const [users, setUsers] = useState([]);
 
-  // Lấy danh sách user
+  // Hàm lấy dữ liệu user từ backend
   const fetchUsers = async () => {
     try {
-      const res = await axios.get("http://localhost:3000/users"); // ⚠️ Đảm bảo đúng port backend
+      const res = await axios.get("http://localhost:3000/users");
       setUsers(res.data);
     } catch (err) {
       console.error("Lỗi tải dữ liệu:", err);
     }
   };
 
+  // Gọi fetchUsers khi component load
   useEffect(() => {
     fetchUsers();
   }, []);
 
-  // Khi thêm user mới
-  const handleUserAdded = (newUser) => {
-    setUsers([...users, newUser]);
-  };
-
   return (
     <div style={{ width: "400px", margin: "40px auto", fontFamily: "sans-serif" }}>
-      <h2>Danh sách người dùng (MongoDB)</h2>
-      <AddUser onUserAdded={handleUserAdded} />
-      <UserList users={users} />
+      <h2>Danh sách người dùng</h2>
+
+      <AddUser fetchUsers={fetchUsers} />
+
+      <ul>
+        {users.map((u) => (
+          <li key={u._id}>
+            {u.name} - {u.email}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
 
 export default App;
+// code frontend: thêm giao diện hiển thị
