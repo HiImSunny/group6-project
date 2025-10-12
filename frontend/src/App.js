@@ -38,4 +38,4 @@ function App() {
 }
 
 export default App;
-// code frontend: thêm giao diện hiển thị
+// code frontend: thêm giao diện hiển thị + API kết nối
