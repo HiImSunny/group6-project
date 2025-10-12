@@ -18,16 +18,9 @@ app.use(express.json());
 
 const User = require('./models/User');
 
-app.get('/users', async (req, res) => {
-  const users = await User.find();
-  res.json(users);
-});
+const userRoutes = require('./routes/user');
 
-app.post('/users', async (req, res) => {
-  const newUser = new User(req.body);
-  await newUser.save();
-  res.json(newUser);
-});
+app.use('/', userRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log('Server running on port', PORT));
