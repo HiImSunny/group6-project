@@ -23,6 +23,7 @@ mongoose.connect(process.env.MONGO_URI)
 
 // Routes
 app.use('/', require('./routes/auth'));
+app.use('/profile', require('./routes/profile'));
 
 // Global error handler (giúp thấy lỗi thật)
 app.use((err, req, res, next) => {
