@@ -1,9 +1,8 @@
+require('dotenv').config();
 const mongoose = require('mongoose');
-
-mongoose.connect('mongodb+srv://meankhoiii:Minhkhoi78757@cluster0.kghqnri.mongodb.net/groupDB?retryWrites=true&w=majority&appName=Cluster0')
-  .then(() => console.log('✅ Connected to MongoDB Atlas'))
-  .catch(err => console.error('❌ MongoDB connection error:', err));
-
+mongoose.connect(process.env.MONGO_URI)
+  .then(()=>console.log('Mongo connected'))
+  .catch(err=>console.error('Mongo error', err));
 
 const express = require('express');
 const app = express();
