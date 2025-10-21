@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Logout from "./pages/Logout";
+import Profile from './pages/Profile';
 import "./App.css";
 
 export default function App() {
@@ -24,6 +25,9 @@ export default function App() {
           <button className={page === "signup" ? "active" : ""} onClick={() => setPage("signup")}>
             Đăng ký
           </button>
+          <button className={page === "profile" ? "active" : ""} onClick={() => setPage("profile")} disabled={!authed} title={!authed ? "Chưa đăng nhập" : ""}>
+            Hồ sơ
+          </button>
           <button
             className={page === "logout" ? "active" : ""}
             onClick={() => setPage("logout")}
@@ -38,6 +42,7 @@ export default function App() {
       <main>
         {page === "login"   && <Login  onAuthed={() => setAuthed(true)} />}
         {page === "signup"  && <Signup onSignedUp={() => { /* ở lại trang này, chỉ báo thành công */ }} />}
+        {page === "profile" && <Profile />}
         {page === "logout"  && <Logout onLoggedOut={() => setAuthed(false)} />}
       </main>
 
