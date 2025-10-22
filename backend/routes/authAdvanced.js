@@ -3,7 +3,6 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const multer = require('multer');
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5*1024*1024 } });
 
 const User = require('../models/User');
 const auth = require('../middleware/auth');  // đã có từ các buổi trước
@@ -76,33 +75,81 @@ router.post('/reset-password', async (req, res) => {
   }
 });
 
-// POST /upload-avatar (cần đăng nhập)
-router.post('/upload-avatar', auth, upload.single('file'), async (req, res) => {
+const upload = multer({
+  storage: multer.memoryStorage(),                 // nhớ dùng memoryStorage để có req.file.buffer
+  limits: { fileSize: 5 * 1024 * 1024 }            // 5MB
+});
+
+// Bọc multer để thấy lỗi rõ
+router.post('/upload-avatar', auth, (req, res, next) => {
+  upload.single('file')(req, res, (err) => {
+    if (err) {
+      console.error('Multer error:', err);
+      return res.status(400).json({ message: 'Upload error', detail: err.message });
+    }
+    next();
+  });
+}, async (req, res) => {
   try {
-    if (!req.file) return res.status(400).json({ msg: 'No file uploaded' });
-    if (!/^image\/(png|jpe?g|webp|gif)$/.test(req.file.mimetype)) {
-      return res.status(400).json({ msg: 'Only image files are allowed' });
+    // 0) Kiểm config Cloudinary
+    const {
+      CLOUDINARY_CLOUD_NAME,
+      CLOUDINARY_API_KEY,
+      CLOUDINARY_API_SECRET
+    } = process.env;
+    if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_API_KEY || !CLOUDINARY_API_SECRET) {
+      return res.status(500).json({ message: 'Server error', detail: 'Cloudinary env missing' });
     }
 
+    // 1) Kiểm JWT & file
+    if (!req.user?.id) {
+      return res.status(401).json({ message: 'Unauthorized', detail: 'Missing/invalid JWT' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded', detail: 'Expect field name "file"' });
+    }
+    console.log('Upload request:', {
+      user: req.user.id,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+      name: req.file.originalname
+    });
+
+    // 2) Validate mimetype
+    if (!/^image\/(png|jpe?g|webp|gif)$/i.test(req.file.mimetype)) {
+      return res.status(400).json({ message: 'Only image files are allowed' });
+    }
+
+    // 3) Upload Cloudinary (ghi log lỗi nếu có)
     const streamUpload = (buffer) => new Promise((resolve, reject) => {
-      const s = cloudinary.uploader.upload_stream(
-        { folder: 'group6/avatars', transformation: [{ width: 512, height: 512, crop: 'limit' }] },
-        (err, result) => err ? reject(err) : resolve(result)
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder: 'group6/avatars',
+          transformation: [{ width: 512, height: 512, crop: 'limit' }]
+        },
+        (err, result) => {
+          if (err) {
+            console.error('Cloudinary error:', err);
+            return reject(err);
+          }
+          resolve(result);
+        }
       );
-      s.end(buffer);
+      stream.end(buffer);
     });
 
     const result = await streamUpload(req.file.buffer);
+
     const user = await User.findByIdAndUpdate(
       req.user.id,
       { $set: { avatarUrl: result.secure_url } },
       { new: true }
     ).select('-password');
 
-    res.json({ msg: 'Avatar uploaded', url: result.secure_url, user });
+    return res.json({ msg: 'Avatar uploaded', url: result.secure_url, user });
   } catch (e) {
-    console.error(e);
-    res.status(500).json({ msg: 'Server error' });
+    console.error('Upload avatar server error:', e);
+    return res.status(500).json({ message: 'Server error', detail: e.message });
   }
 });
 
