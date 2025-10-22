@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { v4: uuidv4 } = require('uuid');
 
 // POST /signup
 router.post('/signup', async (req, res) => {
@@ -37,7 +38,8 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Sai email hoặc mật khẩu' });
     }
 
-    const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const jti = uuidv4();
+    const token = jwt.sign({ id: user._id, role: user.role, jti }, process.env.JWT_SECRET, { expiresIn: '7d' });
     return res.json({ token });
   } catch (err) {
     console.error('POST /login error:', err);
@@ -45,7 +47,25 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// POST /logout
-router.post('/logout', (_req, res) => res.json({ message: 'Logged out' }));
+const express = require('express');
+const jwt = require('jsonwebtoken');
+const blacklist = require('../lib/inMemoryBlacklist');
+
+router.post('/logout', (req, res) => {
+  const h = req.headers.authorization || '';
+  const token = h.startsWith('Bearer ') ? h.slice(7) : null;
+
+  if (!token) return res.status(200).json({ message: 'Logged out (no token provided)' });
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // Đưa jti của "token hiện tại" vào blacklist cho đến khi exp
+    blacklist.add(decoded.jti, decoded.exp);
+    return res.json({ message: 'Logged out (current token revoked)' });
+  } catch {
+    // token hỏng/hết hạn coi như đã logout
+    return res.status(200).json({ message: 'Logged out (invalid/expired token)' });
+  }
+});
 
 module.exports = router;

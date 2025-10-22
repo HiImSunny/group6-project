@@ -1,11 +1,18 @@
+// middleware/auth.js
 const jwt = require('jsonwebtoken');
-module.exports = function(req, res, next) {
-  const header = req.headers.authorization || '';
-  const token = header.startsWith('Bearer ') ? header.slice(7) : null;
+const blacklist = require('../lib/inMemoryBlacklist');
+
+module.exports = (req, res, next) => {
+  const h = req.headers.authorization || '';
+  const token = h.startsWith('Bearer ') ? h.slice(7) : null;
   if (!token) return res.status(401).json({ msg: 'No token' });
+
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = { id: decoded.id, role: decoded.role }; // đảm bảo đã ký kèm role khi login
+    const decoded = jwt.verify(token, process.env.JWT_SECRET); // { id, role, jti, iat, exp }
+    if (blacklist.has(decoded.jti)) {
+      return res.status(401).json({ msg: 'Token revoked' });
+    }
+    req.user = { id: decoded.id, role: decoded.role, jti: decoded.jti };
     next();
   } catch {
     return res.status(401).json({ msg: 'Token invalid' });
