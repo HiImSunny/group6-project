@@ -23,6 +23,7 @@ mongoose.connect(process.env.MONGO_URI)
 
 // Routes
 app.use('/', require('./routes/auth'));
+app.use('/', require('./routes/authAdvanced'));
 app.use('/profile', require('./routes/profile'));
 app.use('/users', require('./routes/user'));
 
