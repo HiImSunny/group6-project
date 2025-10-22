@@ -48,7 +48,6 @@ router.post('/login', async (req, res) => {
 });
 
 const express = require('express');
-const jwt = require('jsonwebtoken');
 const blacklist = require('../lib/inMemoryBlacklist');
 
 router.post('/logout', (req, res) => {
