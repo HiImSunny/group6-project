@@ -3,6 +3,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Logout from "./pages/Logout";
 import Profile from './pages/Profile';
+import AdminUsers from './pages/AdminUsers';
 import "./App.css";
 
 export default function App() {
@@ -29,6 +30,11 @@ export default function App() {
             Hồ sơ
           </button>
           <button
+            className={page === "/admin/users" ? "active" : ""}
+            onClick={() => setPage("/admin/users")}>
+            Quản lý người dùng
+          </button>
+          <button
             className={page === "logout" ? "active" : ""}
             onClick={() => setPage("logout")}
             disabled={!authed}
@@ -43,6 +49,7 @@ export default function App() {
         {page === "login"   && <Login  onAuthed={() => setAuthed(true)} />}
         {page === "signup"  && <Signup onSignedUp={() => { /* ở lại trang này, chỉ báo thành công */ }} />}
         {page === "profile" && <Profile />}
+        {page === "/admin/users" && <AdminUsers />}
         {page === "logout"  && <Logout onLoggedOut={() => setAuthed(false)} />}
       </main>
 

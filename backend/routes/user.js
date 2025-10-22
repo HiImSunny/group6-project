@@ -4,15 +4,14 @@ const auth = require('../middleware/auth');
 const { requireRole, allowSelfOrAdmin } = require('../middleware/rbac');
 const User = require('../models/User');
 
-/**
- * GET /users
- * - Admin-only
- * - Hỗ trợ query: ?q=abc&role=User&limit=20&page=1
- */
-router.get('/', auth, requireRole('Admin'), async (req, res) => {
+router.get('/', auth, requireRole('admin'), async (req, res) => {
   try {
     const { q = '', role, page = 1, limit = 20 } = req.query;
-    const filter = { isDeleted: false };
+
+    // Bộ lọc cơ bản
+    const filter = {};
+
+    // Tìm kiếm theo từ khóa (email, name)
     if (q) {
       filter.$or = [
         { email: { $regex: q, $options: 'i' } },
@@ -20,16 +19,32 @@ router.get('/', auth, requireRole('Admin'), async (req, res) => {
         { phone: { $regex: q, $options: 'i' } }
       ];
     }
+
+    // Lọc theo vai trò (User / Admin)
     if (role) filter.role = role;
 
+    // Phân trang
     const skip = (Number(page) - 1) * Number(limit);
+
+    // Lấy dữ liệu và tổng số lượng song song
     const [items, total] = await Promise.all([
-      User.find(filter).select('-password').sort({ createdAt: -1 }).skip(skip).limit(Number(limit)),
+      User.find(filter)
+        .select('-password')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(Number(limit)),
       User.countDocuments(filter)
     ]);
+
+    // Phản hồi JSON
     res.json({
       items,
-      pagination: { total, page: Number(page), limit: Number(limit), pages: Math.ceil(total / Number(limit)) }
+      pagination: {
+        total,
+        page: Number(page),
+        limit: Number(limit),
+        pages: Math.ceil(total / Number(limit))
+      }
     });
   } catch (e) {
     console.error(e);
@@ -37,25 +52,23 @@ router.get('/', auth, requireRole('Admin'), async (req, res) => {
   }
 });
 
-/**
- * DELETE /users/:id
- * - Admin có thể xóa bất kỳ ai
- * - User có thể tự xóa tài khoản của mình (self-delete)
- * - Chọn 1 trong 2: soft delete (isDeleted=true) HOẶC hard delete
- */
 router.delete('/:id', auth, allowSelfOrAdmin('id'), async (req, res) => {
   try {
     const { id } = req.params;
 
-    // SOFT-DELETE:
-    const user = await User.findByIdAndUpdate(id, { $set: { isDeleted: true } }, { new: true });
-    if (!user) return res.status(404).json({ msg: 'User not found' });
-    return res.status(200).json({ msg: 'Deleted', id, soft: true });
+    // HARD DELETE:
+    const del = await User.findByIdAndDelete(id);
 
-    // Nếu muốn hard-delete thì thay bằng:
-    // const del = await User.findByIdAndDelete(id);
-    // if (!del) return res.status(404).json({ msg: 'User not found' });
-    // return res.status(204).send();
+    if (!del) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+
+    // Trả về thông báo sau khi xóa thành công
+    return res.status(200).json({
+      msg: 'User permanently deleted',
+      id,
+      hard: true
+    });
   } catch (e) {
     console.error(e);
     res.status(500).json({ msg: 'Server error' });

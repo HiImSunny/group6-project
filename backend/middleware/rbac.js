@@ -8,7 +8,7 @@ exports.requireRole = (...roles) => (req, res, next) => {
 };
 
 exports.allowSelfOrAdmin = (paramUserIdField = 'id') => (req, res, next) => {
-  const isAdmin = req.user?.role === 'Admin';
+  const isAdmin = req.user?.role === 'admin';
   const targetId = req.params[paramUserIdField]; // /users/:id
   const isSelf = req.user?.id === targetId;
   if (isAdmin || isSelf) return next();
