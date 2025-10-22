@@ -1,95 +1,267 @@
-body {
+/* ====== Base & Theme ====== */
+:root{
+  --bg: #0b1220;
+  --panel: #0f172a;        /* slate-900-ish */
+  --panel-2: #111827;      /* gray-900-ish */
+  --text: #e5e7eb;         /* gray-200 */
+  --muted: #9ca3af;        /* gray-400 */
+  --brand: #3b82f6;        /* blue-500 */
+  --brand-2: #2563eb;      /* blue-600 */
+  --accent: #10b981;       /* emerald-500 */
+  --danger: #ef4444;       /* red-500 */
+  --warning: #f59e0b;      /* amber-500 */
+  --ring: rgba(59, 130, 246, 0.35);
+  --border: #1f2937;       /* gray-800 */
+  --shadow: 0 10px 30px rgba(0,0,0,0.35);
+  --radius: 16px;
+}
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; }
+body{
   margin: 0;
-  font-family: "Segoe UI", Roboto, sans-serif;
-  background: #f7f8fa;
-  color: #333;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  background: radial-gradient(1200px 600px at 20% -10%, #14203a 0, transparent 60%) ,
+              radial-gradient(900px 500px at 110% 10%, #1a2b4f 0, transparent 55%),
+              var(--bg);
+  color: var(--text);
+  line-height: 1.55;
 }
 
-.container {
-  max-width: 600px;
-  margin: 40px auto;
+/* ====== Layout ====== */
+.container{
+  max-width: 1080px;
+  margin: 28px auto;
   padding: 20px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
-header {
-  text-align: center;
-  margin-bottom: 20px;
+header{
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+  position: sticky;
+  top: 16px;
+  backdrop-filter: blur(6px);
+  z-index: 10;
 }
 
-header h1 {
-  color: #0077ff;
-  font-size: 22px;
-  margin-bottom: 10px;
+header h1{
+  margin: 0 0 12px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
 }
 
-nav {
+/* ====== Top Nav ====== */
+nav{
   display: flex;
-  justify-content: center;
+  flex-wrap: wrap;
   gap: 10px;
 }
 
-nav button {
-  background: #e0e0e0;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.3s;
+nav a{
+  display: inline-block;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--panel), var(--panel-2));
+  color: var(--text);
+  text-decoration: none;
+  font-size: 14px;
+  transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease;
 }
 
-nav button.active {
-  background: #0077ff;
-  color: white;
+nav a:hover{
+  transform: translateY(-1px);
+  border-color: #2a3a55;
+  box-shadow: 0 6px 18px rgba(0,0,0,.35);
 }
 
-nav button:hover {
-  background: #0077ff;
-  color: white;
+nav a:active{ transform: translateY(0); }
+
+nav a[aria-disabled="true"]{
+  opacity: .5;
+  pointer-events: none;
 }
 
-main {
-  display: flex;
-  justify-content: center;
+/* Nếu bạn đổi <a> -> <NavLink>, class "active" sẽ có hiệu lực */
+nav a.active{
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--ring);
 }
 
-.form-box {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+/* ====== Main Panel ====== */
+main{
+  margin-top: 18px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px;
+  box-shadow: var(--shadow);
 }
 
-.form-box h2 {
-  text-align: center;
-  color: #0077ff;
+/* Section/Card khung cho từng page (Login, Profile, v.v.) */
+.section, .card{
+  background: linear-gradient(180deg, var(--panel), var(--panel-2));
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) - 4px);
+  padding: 18px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
 }
 
-.form-box input {
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
+/* ====== Forms ====== */
+form{
+  display: grid;
+  gap: 14px;
 }
 
-.form-box button {
-  padding: 10px;
-  background: #0077ff;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.form-box button:hover {
-  background: #005ecb;
-}
-
-footer {
-  margin-top: 20px;
-  text-align: center;
+label{
   font-size: 13px;
-  color: #777;
+  color: var(--muted);
+}
+
+.input, input[type="text"], input[type="email"], input[type="password"], input[type="file"]{
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: #0b1327;
+  color: var(--text);
+  outline: none;
+  transition: box-shadow .12s ease, border-color .12s ease;
+}
+
+input:focus{
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--ring);
+}
+
+.helper{
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ====== Buttons ====== */
+.btn{
+  appearance: none;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, #102037, #0d1a2d);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+}
+
+.btn:hover{
+  transform: translateY(-1px);
+  border-color: #2a3a55;
+  box-shadow: 0 8px 22px rgba(0,0,0,.35);
+}
+
+.btn:active{ transform: translateY(0); }
+
+.btn.primary{
+  background: linear-gradient(180deg, var(--brand), var(--brand-2));
+  border-color: var(--brand-2);
+  color: white;
+}
+.btn.success{ background: linear-gradient(180deg, var(--accent), #059669); border-color:#047857; }
+.btn.danger{ background: linear-gradient(180deg, var(--danger), #b91c1c); border-color:#991b1b; }
+
+/* Link nút nhỏ trong form */
+.button-link{
+  background: transparent;
+  border: none;
+  color: var(--brand);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* ====== Tables (AdminUsers) ====== */
+.table{
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.table thead th{
+  text-align: left;
+  font-size: 13px;
+  color: var(--muted);
+  background: #0f1a2f;
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.table tbody td{
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.table tbody tr:hover{
+  background: rgba(255,255,255,0.02);
+}
+
+/* ====== Alerts / Toast ====== */
+.alert{
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: #0c1630;
+  color: var(--text);
+}
+.alert.success{ border-color: #065f46; background: rgba(16,185,129,0.1); }
+.alert.error{ border-color: #7f1d1d; background: rgba(239,68,68,0.12); }
+.alert.warning{ border-color: #92400e; background: rgba(245,158,11,0.12); }
+
+/* ====== Footer ====== */
+footer{
+  opacity: .75;
+  font-size: 13px;
+  text-align: center;
+  margin: 18px 0 8px;
+}
+
+/* ====== Utilities ====== */
+.center{
+  display: grid;
+  place-items: center;
+}
+
+.row{
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.grid{
+  display: grid;
+  gap: 14px;
+}
+
+.grid.cols-2{ grid-template-columns: repeat(2, 1fr); }
+.grid.cols-3{ grid-template-columns: repeat(3, 1fr); }
+
+hr{
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 12px 0;
+}
+
+/* ====== Responsive ====== */
+@media (max-width: 680px){
+  .container{ padding: 12px; margin: 14px auto; }
+  header{ padding: 14px; }
+  nav{ gap: 8px; }
+  nav a{ padding: 8px 12px; font-size: 13px; }
+  main{ padding: 16px; }
+  .grid.cols-2, .grid.cols-3{ grid-template-columns: 1fr; }
 }
