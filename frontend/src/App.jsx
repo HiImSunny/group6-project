@@ -4,6 +4,8 @@ import Signup from "./pages/Signup";
 import Logout from "./pages/Logout";
 import Profile from './pages/Profile';
 import AdminUsers from './pages/AdminUsers';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import "./App.css";
 
 export default function App() {
@@ -35,6 +37,16 @@ export default function App() {
             Quản lý người dùng
           </button>
           <button
+            className={page === "forgot-password" ? "active" : ""}
+            onClick={() => setPage("forgot-password")}>
+            Quên mật khẩu
+          </button>
+          <button
+            className={page === "reset-password" ? "active" : ""}
+            onClick={() => setPage("reset-password")}>
+            Đặt lại mật khẩu
+          </button>
+          <button
             className={page === "logout" ? "active" : ""}
             onClick={() => setPage("logout")}
             disabled={!authed}
@@ -50,6 +62,8 @@ export default function App() {
         {page === "signup"  && <Signup onSignedUp={() => { /* ở lại trang này, chỉ báo thành công */ }} />}
         {page === "profile" && <Profile />}
         {page === "/admin/users" && <AdminUsers />}
+        {page === "forgot-password" && <ForgotPassword />}
+        {page === "reset-password"  && <ResetPassword />}
         {page === "logout"  && <Logout onLoggedOut={() => setAuthed(false)} />}
       </main>
 
