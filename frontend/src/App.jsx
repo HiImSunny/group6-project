@@ -6,6 +6,7 @@ import Profile from './pages/Profile';
 import AdminUsers from './pages/AdminUsers';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import UploadAvatar from './pages/UploadAvatar';
 import "./App.css";
 
 export default function App() {
@@ -47,6 +48,12 @@ export default function App() {
             Đặt lại mật khẩu
           </button>
           <button
+            className={page === "upload-avatar" ? "active" : ""}
+            onClick={() => setPage("upload-avatar")}
+          >
+            Tải lên ảnh đại diện
+          </button>
+          <button
             className={page === "logout" ? "active" : ""}
             onClick={() => setPage("logout")}
             disabled={!authed}
@@ -64,6 +71,7 @@ export default function App() {
         {page === "/admin/users" && <AdminUsers />}
         {page === "forgot-password" && <ForgotPassword />}
         {page === "reset-password"  && <ResetPassword />}
+        {page === "upload-avatar"   && <UploadAvatar />}
         {page === "logout"  && <Logout onLoggedOut={() => setAuthed(false)} />}
       </main>
 
