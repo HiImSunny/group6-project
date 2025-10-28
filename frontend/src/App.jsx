@@ -1,3 +1,4 @@
+// frontend/src/App.jsx
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
@@ -11,12 +12,12 @@ import UploadAvatar from "./pages/UploadAvatar";
 import "./App.css";
 
 function Private({ children }) {
-  const authed = !!localStorage.getItem("token");
+  const authed = !!localStorage.getItem("accessToken");
   return authed ? children : <Navigate to="/login" replace />;
 }
 
 export default function App() {
-  const authed = !!localStorage.getItem("token");
+  const authed = !!localStorage.getItem("accessToken");
 
   return (
     <BrowserRouter>

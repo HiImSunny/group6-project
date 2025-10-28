@@ -7,7 +7,6 @@ const mongoose = require('mongoose');
 
 const app = express();
 
-// ⚠️ body parser PHẢI trước routes
 app.use(cors({ origin: 'http://localhost:4000', credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -27,7 +26,6 @@ app.use('/', require('./routes/authAdvanced'));
 app.use('/profile', require('./routes/profile'));
 app.use('/users', require('./routes/user'));
 
-// Global error handler (giúp thấy lỗi thật)
 app.use((err, req, res, next) => {
   console.error('🔥 Global error:', err);
   res.status(500).json({ message: 'Server error', detail: err.message });

@@ -1,20 +1,19 @@
 // middleware/auth.js
-const jwt = require('jsonwebtoken');
-const blacklist = require('../lib/inMemoryBlacklist');
+const { verifyAccess } = require('../utils/jwt');
 
-module.exports = (req, res, next) => {
+const requireAuth = (req, res, next) => {
   const h = req.headers.authorization || '';
   const token = h.startsWith('Bearer ') ? h.slice(7) : null;
-  if (!token) return res.status(401).json({ msg: 'No token' });
+  if (!token) return res.status(401).json({ message: 'No access token' });
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET); // { id, role, jti, iat, exp }
-    if (blacklist.has(decoded.jti)) {
-      return res.status(401).json({ msg: 'Token revoked' });
-    }
-    req.user = { id: decoded.id, role: decoded.role, jti: decoded.jti };
+    const payload = verifyAccess(token);
+    req.user = payload; // { id, role, email }
     next();
   } catch {
-    return res.status(401).json({ msg: 'Token invalid' });
+    return res.status(401).json({ message: 'Invalid/expired access token' });
   }
 };
+
+// Export đúng kiểu cũ → require() sẽ nhận được hàm
+module.exports = requireAuth;

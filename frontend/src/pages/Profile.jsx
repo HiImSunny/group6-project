@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import api from "../api";
+import api from "../api/http";
 
 export default function Profile() {
   const [profile, setProfile] = useState({ name: '', email: '', phone: '' });
@@ -8,10 +8,7 @@ export default function Profile() {
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const token = localStorage.getItem('token');
-      const res = await api.get('/profile', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await api.get('/profile');
       setProfile(res.data);
       setLoading(false);
     };
@@ -23,7 +20,7 @@ export default function Profile() {
   const handleSubmit = async e => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('accessToken');
       const res = await api.put('/profile', profile, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -45,6 +42,8 @@ export default function Profile() {
 
         <label>Email</label>
         <input name="email" value={profile.email} onChange={handleChange} />
+
+        <pre>{JSON.stringify(profile, null, 2)}</pre>
 
         <button type="submit">Lưu thay đổi</button>
       </form>

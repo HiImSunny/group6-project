@@ -1,3 +1,4 @@
+// frontend/src/api.js
 import axios from "axios";
 
 const api = axios.create({
@@ -5,7 +6,7 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((cfg) => {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("accessToken");
   if (token) cfg.headers.Authorization = `Bearer ${token}`;
   return cfg;
 });

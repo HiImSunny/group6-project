@@ -1,3 +1,4 @@
+// backend/routes/profile.js
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
@@ -8,7 +9,7 @@ router.get('/', auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
     if (!user) return res.status(404).json({ msg: 'User not found' });
-    res.json(user);
+    res.json({ message: "Access granted", user: req.user });
   } catch (err) {
     res.status(500).send('Server Error');
   }
