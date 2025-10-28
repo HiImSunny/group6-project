@@ -6,7 +6,7 @@ export default function Logout({ onLoggedOut }) {
 
   const handleLogout = async () => {
     try { await api.post("/logout"); } catch {}
-    localStorage.removeItem("token");
+    localStorage.removeItem("accessToken");
     setMsg("Bạn đã đăng xuất (token đã bị xóa khỏi client).");
     onLoggedOut?.();
   };

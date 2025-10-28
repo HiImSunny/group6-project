@@ -1,10 +1,11 @@
+// frontend/src/pages/Login.jsx
 import React, { useState } from "react";
 import api from "../api";
 
 export default function Login({ onAuthed }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [token, setToken] = useState(localStorage.getItem("token") || "");
+  const [token, setToken] = useState(localStorage.getItem("accessToken") || "");
   const [msg, setMsg] = useState("");
 
   const handleSubmit = async (e) => {
@@ -12,8 +13,9 @@ export default function Login({ onAuthed }) {
     setMsg(""); setToken("");
     try {
       const { data } = await api.post("/login", { email, password }); // { token }
-      localStorage.setItem("token", data.token);
-      setToken(data.token);
+      localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem("refreshToken", data.refreshToken);
+      setToken(data.accessToken);
       setMsg("Đăng nhập thành công! (JWT token hiển thị bên dưới)");
       onAuthed?.();
     } catch (err) {

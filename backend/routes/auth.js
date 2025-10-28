@@ -1,70 +1,71 @@
+// backend/routes/auth.js
 const router = require('express').Router();
-const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const User = require('../models/User');
-const { v4: uuidv4 } = require('uuid');
+const RefreshToken = require('../models/RefreshToken');
+const { signAccess, signRefresh, verifyRefresh } = require('../utils/jwt');
+const ms = require('ms');
 
-// POST /signup
-router.post('/signup', async (req, res) => {
-  try {
-    const { name, email, password } = req.body || {};
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: 'Thiếu name/email/password' });
+router.post('/login', async (req,res)=>{
+  const { email, password } = req.body;
+  const user = await User.findOne({ email });
+  if(!user) return res.status(400).json({ message:'Email không tồn tại' });
+  const ok = await bcrypt.compare(password, user.password);
+  if(!ok) return res.status(400).json({ message:'Sai mật khẩu' });
+
+  const accessToken = signAccess({ id:user._id, role:user.role, email:user.email });
+  const refreshToken = signRefresh({ id:user._id });
+
+  const expiresAt = new Date(Date.now() + ms(process.env.REFRESH_EXPIRES || '7d'));
+  await RefreshToken.create({
+    userId: user._id,
+    token: refreshToken,
+    userAgent: req.headers['user-agent'],
+    ip: req.ip,
+    expiresAt
+  });
+
+  res.json({ accessToken, refreshToken, user: { id:user._id, email:user.email, role:user.role } });
+});
+
+router.post('/refresh', async (req,res)=>{
+  const { refreshToken } = req.body;
+  if(!refreshToken) return res.status(400).json({ message:'Missing refresh token' });
+
+  // 1) check DB token (and not revoked)
+  const found = await RefreshToken.findOne({ token: refreshToken, revokedAt: { $exists:false } });
+  if(!found) return res.status(401).json({ message:'Refresh token không hợp lệ' });
+
+  try{
+    // 2) verify JWT signature and expiration
+    const payload = verifyRefresh(refreshToken); // { id, iat, exp }
+
+    // 3) load user info (so access token contains role/email)
+    const user = await User.findById(payload.id).select('email role');
+    if(!user) {
+      // Optionally revoke the refresh token for safety
+      await RefreshToken.updateOne({ token: refreshToken }, { $set: { revokedAt: new Date() } });
+      return res.status(401).json({ message:'User không tồn tại' });
     }
 
-    // kiểm tra tồn tại nhanh
-    const exists = await User.findOne({ email }).lean();
-    if (exists) return res.status(409).json({ message: 'Email đã tồn tại' });
+    // 4) issue new access token
+    const accessToken = signAccess({ id: user._id, role: user.role, email: user.email });
 
-    const user = await User.create({ name, email, password });
-    return res.status(201).json({ id: user._id, email: user.email });
+    // 5) respond
+    return res.json({ accessToken });
   } catch (err) {
-    // trùng khóa unique
-    if (err?.code === 11000) {
-      return res.status(409).json({ message: 'Email đã tồn tại' });
-    }
-    console.error('POST /signup error:', err);
-    return res.status(500).json({ message: 'Server error', detail: err.message });
+    console.error('refresh error:', err);
+    return res.status(401).json({ message:'Refresh token hết hạn/không hợp lệ' });
   }
 });
 
-// POST /login
-router.post('/login', async (req, res) => {
-  try {
-    const { email, password } = req.body || {};
-    if (!email || !password) return res.status(400).json({ message: 'Thiếu email/password' });
 
-    const user = await User.findOne({ email });
-    if (!user || !(await user.comparePassword(password))) {
-      return res.status(400).json({ message: 'Sai email hoặc mật khẩu' });
-    }
-
-    const jti = uuidv4();
-    const token = jwt.sign({ id: user._id, role: user.role, jti }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    return res.json({ token });
-  } catch (err) {
-    console.error('POST /login error:', err);
-    return res.status(500).json({ message: 'Server error', detail: err.message });
+router.post('/logout', async (req,res)=>{
+  const { refreshToken } = req.body;
+  if (refreshToken) {
+    await RefreshToken.updateOne({ token: refreshToken }, { $set: { revokedAt: new Date() } });
   }
-});
-
-const express = require('express');
-const blacklist = require('../lib/inMemoryBlacklist');
-
-router.post('/logout', (req, res) => {
-  const h = req.headers.authorization || '';
-  const token = h.startsWith('Bearer ') ? h.slice(7) : null;
-
-  if (!token) return res.status(200).json({ message: 'Logged out (no token provided)' });
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    // Đưa jti của "token hiện tại" vào blacklist cho đến khi exp
-    blacklist.add(decoded.jti, decoded.exp);
-    return res.json({ message: 'Logged out (current token revoked)' });
-  } catch {
-    // token hỏng/hết hạn coi như đã logout
-    return res.status(200).json({ message: 'Logged out (invalid/expired token)' });
-  }
+  res.json({ message:'Logged out' });
 });
 
 module.exports = router;

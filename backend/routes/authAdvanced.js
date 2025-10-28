@@ -5,7 +5,7 @@ const crypto = require('crypto');
 const multer = require('multer');
 
 const User = require('../models/User');
-const auth = require('../middleware/auth');  // đã có từ các buổi trước
+const auth = require('../middleware/auth');
 const { sendMail } = require('../lib/mailer');
 const { createResetToken } = require('../lib/resetToken');
 const cloudinary = require('../lib/cloudinary');
