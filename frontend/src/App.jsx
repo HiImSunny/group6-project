@@ -1,4 +1,3 @@
-// frontend/src/App.jsx
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
@@ -9,6 +8,7 @@ import AdminUsers from "./pages/AdminUsers";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import UploadAvatar from "./pages/UploadAvatar";
+import IfRole from "./components/IfRole";
 import "./App.css";
 
 function Private({ children }) {
@@ -25,14 +25,30 @@ export default function App() {
         <header>
           <h1>🌍 Group 6 — MERN Auth</h1>
           <nav>
-            <a href="/login">Đăng nhập</a>
-            <a href="/signup">Đăng ký</a>
-            <a href="/profile" {...(!authed ? { "aria-disabled": true } : {})}>Hồ sơ</a>
-            <a href="/admin/users">Quản lý người dùng</a>
-            <a href="/forgot-password">Quên mật khẩu</a>
-            <a href="/reset-password">Đặt lại mật khẩu</a>
-            <a href="/upload-avatar">Tải lên ảnh đại diện</a>
-            <a href="/logout" {...(!authed ? { "aria-disabled": true } : {})}>Đăng xuất</a>
+            {/* PUBLIC */}
+            {!authed && (
+              <>
+                <a href="/login">Đăng nhập</a>
+                <a href="/signup">Đăng ký</a>
+                <a href="/forgot-password">Quên mật khẩu</a>
+                <a href="/reset-password">Đặt lại mật khẩu</a>
+              </>
+            )}
+
+            {/* PRIVATE */}
+            {authed && (
+              <>
+                <a href="/profile">Hồ sơ</a>
+                <a href="/upload-avatar">Tải lên ảnh đại diện</a>
+
+                {/* Chỉ admin hoặc moderator mới thấy */}
+                <IfRole role={["admin", "moderator"]}>
+                  <a href="/admin/users">Quản lý người dùng</a>
+                </IfRole>
+
+                <a href="/logout">Đăng xuất</a>
+              </>
+            )}
           </nav>
         </header>
 
@@ -46,13 +62,25 @@ export default function App() {
 
             {/* PRIVATE */}
             <Route path="/profile" element={<Private><Profile /></Private>} />
-            <Route path="/admin/users" element={<Private><AdminUsers /></Private>} />
             <Route path="/upload-avatar" element={<Private><UploadAvatar /></Private>} />
+
+            {/* Chỉ admin/moderator mới truy cập */}
+            <Route
+              path="/admin/users"
+              element={
+                <Private>
+                  <IfRole role={["admin", "moderator"]}>
+                    <AdminUsers />
+                  </IfRole>
+                </Private>
+              }
+            />
+
             <Route path="/logout" element={<Private><Logout /></Private>} />
 
             {/* default */}
-            <Route path="/" element={<Navigate to="/login" replace />} />
-            <Route path="*" element={<Navigate to="/login" replace />} />
+            <Route path="/" element={<Navigate to={authed ? "/profile" : "/login"} replace />} />
+            <Route path="*" element={<Navigate to={authed ? "/profile" : "/login"} replace />} />
           </Routes>
         </main>
 
