@@ -15,6 +15,8 @@ export default function Login({ onAuthed }) {
       const { data } = await api.post("/login", { email, password }); // { token }
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("refreshToken", data.refreshToken);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
       setToken(data.accessToken);
       setMsg("Đăng nhập thành công! (JWT token hiển thị bên dưới)");
       onAuthed?.();

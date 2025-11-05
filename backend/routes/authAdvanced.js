@@ -80,8 +80,8 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 }            // 5MB
 });
 
-// Bọc multer để thấy lỗi rõ
-router.post('/upload-avatar', auth, (req, res, next) => {
+const { requireAuth } = require('../middleware/auth');
+router.post('/upload-avatar', requireAuth, (req, res, next) => {
   upload.single('file')(req, res, (err) => {
     if (err) {
       console.error('Multer error:', err);

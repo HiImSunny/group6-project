@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import api from '../api';
+import api from '../api/http';
 
 export default function AdminUsers() {
   const [data, setData] = useState({ items: [], pagination: { page: 1, limit: 20, total: 0, pages: 0 } });
