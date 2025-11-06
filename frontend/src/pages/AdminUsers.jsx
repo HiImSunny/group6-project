@@ -1,8 +1,57 @@
 import React, { useEffect, useState } from 'react';
 import api from '../api/http';
 
+const DEFAULT_PAGE = { page: 1, limit: 20, total: 0, pages: 0 };
+const emptyState = { items: [], pagination: DEFAULT_PAGE };
+
+function normalizeUsersResponse(resData) {
+  // Các khả năng backend hay trả:
+  // 1) { items: [...], pagination: {...} }
+  // 2) { data: { items: [...], pagination: {...} } }
+  // 3) [ ... ]  (mảng thuần)
+  // 4) { users: [...], total, page, pages }  (tự do)
+  if (!resData) return emptyState;
+
+  // bao resData.data
+  const d = resData.data ?? resData;
+
+  // Trường hợp là mảng thuần
+  if (Array.isArray(d)) {
+    return { items: d, pagination: DEFAULT_PAGE };
+  }
+
+  // Trường hợp có items/pagination chuẩn
+  if (Array.isArray(d.items)) {
+    return {
+      items: d.items,
+      pagination: d.pagination || {
+        page: d.page ?? 1,
+        limit: d.limit ?? 20,
+        total: d.total ?? d.items.length,
+        pages: d.pages ?? 1,
+      }
+    };
+  }
+
+  // Trường hợp field tên khác (users)
+  if (Array.isArray(d.users)) {
+    return {
+      items: d.users,
+      pagination: {
+        page: d.page ?? 1,
+        limit: d.limit ?? 20,
+        total: d.total ?? d.users.length,
+        pages: d.pages ?? 1,
+      }
+    };
+  }
+
+  // fallback
+  return emptyState;
+}
+
 export default function AdminUsers() {
-  const [data, setData] = useState({ items: [], pagination: { page: 1, limit: 20, total: 0, pages: 0 } });
+  const [data, setData] = useState(emptyState);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState('');
   const [role, setRole] = useState('');
@@ -10,26 +59,33 @@ export default function AdminUsers() {
 
   const fetchUsers = async (page = 1) => {
     setLoading(true);
+    setMsg('');
     try {
       const params = { page, limit: 20 };
       if (q) params.q = q;
       if (role) params.role = role;
-      const res = await api.get('/users', { params });
-      setData(res.data);
+
+      const res = await api.get('/admin/users', { params });
+      const normalized = normalizeUsersResponse(res.data);
+      setData(normalized);
     } catch (e) {
-  if (e?.response?.status === 403) {
-    setMsg('Bạn không có quyền Admin. Vui lòng đăng nhập bằng tài khoản Admin.');
-  } else if (e?.response?.status === 401) {
-    setMsg('Thiếu hoặc sai token. Hãy đăng nhập lại.');
-  } else {
-    setMsg('Không tải được danh sách.');
-  }
+      // Giữ state an toàn để render không vỡ
+      setData(emptyState);
+
+      if (e?.response?.status === 403) {
+        setMsg('Bạn không có quyền Admin. Vui lòng đăng nhập bằng tài khoản Admin.');
+      } else if (e?.response?.status === 401) {
+        setMsg('Thiếu hoặc sai token. Hãy đăng nhập lại.');
+      } else {
+        setMsg('Không tải được danh sách.');
+      }
+      console.error(e);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchUsers(1); /* on mount */ }, []);
+  useEffect(() => { fetchUsers(1); }, []); // on mount
 
   const onSearch = (e) => { e.preventDefault(); fetchUsers(1); };
 
@@ -38,8 +94,7 @@ export default function AdminUsers() {
     try {
       await api.delete(`/users/${id}`);
       setMsg('Đã xóa.');
-      // reload current page
-      fetchUsers(data.pagination.page);
+      fetchUsers(data.pagination.page || 1);
     } catch (e) {
       setMsg('Xóa thất bại (cần Admin hoặc là chính bạn).');
       console.error(e);
@@ -47,6 +102,9 @@ export default function AdminUsers() {
   };
 
   if (loading) return <p>Đang tải...</p>;
+
+  const items = data?.items ?? [];
+  const pg = data?.pagination ?? DEFAULT_PAGE;
 
   return (
     <div>
@@ -58,6 +116,8 @@ export default function AdminUsers() {
           <option value="">Tất cả vai trò</option>
           <option value="User">User</option>
           <option value="Admin">Admin</option>
+          {/* Nếu backend có moderator thì thêm */}
+          <option value="moderator">moderator</option>
         </select>
         <button type="submit">Tìm</button>
       </form>
@@ -69,32 +129,32 @@ export default function AdminUsers() {
           </tr>
         </thead>
         <tbody>
-          {data.items.map(u => (
-            <tr key={u._id}>
+          {items.map(u => (
+            <tr key={u._id || u.id || u.email}>
               <td>{u.email}</td>
-              <td>{u.name}</td>
-              <td>{u.role}</td>
-              <td>{new Date(u.createdAt).toLocaleString()}</td>
+              <td>{u.name || u.fullName || '-'}</td>
+              <td>{u.role || u.roles?.[0] || 'User'}</td>
+              <td>{u.createdAt ? new Date(u.createdAt).toLocaleString() : '-'}</td>
               <td>
-                <button onClick={() => onDelete(u._id)}>Xóa</button>
+                <button onClick={() => onDelete(u._id || u.id)}>Xóa</button>
               </td>
             </tr>
           ))}
-          {data.items.length === 0 && (
+          {items.length === 0 && (
             <tr><td colSpan="6">Không có người dùng.</td></tr>
           )}
         </tbody>
       </table>
 
       <div style={{ marginTop: 8 }}>
-        Trang {data.pagination.page}/{data.pagination.pages} • Tổng {data.pagination.total}
+        Trang {pg.page}/{pg.pages} • Tổng {pg.total}
         <div style={{ display: 'inline-block', marginLeft: 8 }}>
-          <button disabled={data.pagination.page <= 1} onClick={() => fetchUsers(data.pagination.page - 1)}>« Trước</button>
-          <button disabled={data.pagination.page >= data.pagination.pages} onClick={() => fetchUsers(data.pagination.page + 1)}>Sau »</button>
+          <button disabled={(pg.page || 1) <= 1} onClick={() => fetchUsers((pg.page || 1) - 1)}>« Trước</button>
+          <button disabled={(pg.page || 1) >= (pg.pages || 1)} onClick={() => fetchUsers((pg.page || 1) + 1)}>Sau »</button>
         </div>
       </div>
 
-      {msg && <p style={{ color: 'green' }}>{msg}</p>}
+      {msg && <p style={{ color: msg.includes('không') || msg.includes('Thiếu') ? 'crimson' : 'green' }}>{msg}</p>}
     </div>
   );
 }

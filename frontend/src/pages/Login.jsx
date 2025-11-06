@@ -1,8 +1,11 @@
 // frontend/src/pages/Login.jsx
 import React, { useEffect, useMemo, useState } from "react";
+import { useDispatch } from "react-redux";
+import { setLoginData } from "../features/auth/authSlice";
 import api from "../api";
 
 export default function Login({ onAuthed }) {
+  const dispatch = useDispatch(); // <-- ĐẶT Ở ĐÂY (trên cùng component)
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -42,29 +45,40 @@ export default function Login({ onAuthed }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isCooling) return; // đang bị chặn
-    setMsg(""); setToken("");
-
+    // ...
     try {
-      const { data, headers } = await api.post("/login", { email, password });
-      // cập nhật header rate limit (nếu backend gửi cho cả request thành công)
+      const { data, headers } = await api.post("/login", { email, password }); // giữ dấu "/"
       readRateHeaders({ headers });
 
+      // tuỳ bạn vẫn muốn lưu localStorage, cứ giữ nguyên 3 dòng dưới:
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("refreshToken", data.refreshToken);
       localStorage.setItem("user", JSON.stringify(data.user));
 
-      setToken(data.accessToken);
+      // Cập nhật Redux để UI đổi ngay không cần reload
+      dispatch(setLoginData({
+        user: data.user,
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken
+      }));
+
       setMsg("Đăng nhập thành công! (JWT token hiển thị bên dưới)");
       onAuthed?.();
+
+      dispatch(setLoginData({
+        user: data.user,
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken
+      }));
+
     } catch (err) {
       // đọc headers rate limit để biết còn lại & cooldown
       readRateHeaders(err);
 
       if (err?.response?.status === 429) {
         setMsg("Bạn đã thử quá nhiều lần. Tạm khoá đăng nhập trong " +
-               (cooldown || Number(err?.response?.headers?.["retry-after"]) || Number(err?.response?.headers?.["ratelimit-reset"]) || 0) +
-               " giây.");
+          (cooldown || Number(err?.response?.headers?.["retry-after"]) || Number(err?.response?.headers?.["ratelimit-reset"]) || 0) +
+          " giây.");
       } else if (err?.response?.status === 401) {
         setMsg(err.response?.data?.msg || "Sai email/mật khẩu");
       } else if (err?.response?.status === 400) {
@@ -128,3 +142,4 @@ export default function Login({ onAuthed }) {
     </form>
   );
 }
+

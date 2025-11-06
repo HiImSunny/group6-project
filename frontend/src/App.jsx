@@ -1,5 +1,7 @@
+// frontend/src/App.jsx
 import React from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, Link } from "react-router-dom";
+import { useSelector } from "react-redux"; // ⬅️ lấy state auth từ Redux
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Logout from "./pages/Logout";
@@ -11,14 +13,14 @@ import ResetPassword from "./pages/ResetPassword";
 import UploadAvatar from "./pages/UploadAvatar";
 import IfRole from "./components/IfRole";
 import "./App.css";
+import ProtectedRoute from "./components/ProtectedRoute";
 
-function Private({ children }) {
-  const authed = !!localStorage.getItem("accessToken");
-  return authed ? children : <Navigate to="/login" replace />;
-}
+// ❌ Bỏ Private cũ (đọc localStorage, không re-render)
+// function Private({ children }) { ... }
 
 export default function App() {
-  const authed = !!localStorage.getItem("accessToken");
+  // ✅ Lấy authed từ Redux để UI tự cập nhật
+  const authed = useSelector((s) => !!s.auth.accessToken);
 
   return (
     <BrowserRouter>
@@ -29,27 +31,26 @@ export default function App() {
             {/* PUBLIC */}
             {!authed && (
               <>
-                <a href="/login">Đăng nhập</a>
-                <a href="/signup">Đăng ký</a>
-                <a href="/forgot-password">Quên mật khẩu</a>
-                <a href="/reset-password">Đặt lại mật khẩu</a>
+                <Link to="/login">Đăng nhập</Link>
+                <Link to="/signup">Đăng ký</Link>
+                <Link to="/forgot-password">Quên mật khẩu</Link>
+                <Link to="/reset-password">Đặt lại mật khẩu</Link>
               </>
             )}
 
             {/* PRIVATE */}
             {authed && (
               <>
-                <a href="/profile">Hồ sơ</a>
-                <a href="/upload-avatar">Tải lên ảnh đại diện</a>
+                <Link to="/profile">Hồ sơ</Link>
+                <Link to="/upload-avatar">Tải lên ảnh đại diện</Link>
 
                 {/* Chỉ admin hoặc moderator mới thấy */}
                 <IfRole role={["admin", "moderator"]}>
-                  <a href="/admin/users">Quản lý người dùng</a>
-                  <a href="/admin/logs">Xem nhật ký</a>
+                  <Link to="/admin/users">Quản lý người dùng</Link>
+                  <Link to="/admin/logs">Xem nhật ký</Link>
                 </IfRole>
 
-
-                <a href="/logout">Đăng xuất</a>
+                <Link to="/logout">Đăng xuất</Link>
               </>
             )}
           </nav>
@@ -63,34 +64,31 @@ export default function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
 
-            {/* PRIVATE */}
-            <Route path="/profile" element={<Private><Profile /></Private>} />
-            <Route path="/upload-avatar" element={<Private><UploadAvatar /></Private>} />
+            {/* PRIVATE (bọc bằng ProtectedRoute) */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/upload-avatar" element={<UploadAvatar />} />
 
-            {/* Chỉ admin/moderator mới truy cập */}
-            <Route
-              path="/admin/users"
-              element={
-                <Private>
+              {/* Chỉ admin/moderator mới truy cập */}
+              <Route
+                path="/admin/users"
+                element={
                   <IfRole role={["admin", "moderator"]}>
                     <AdminUsers />
                   </IfRole>
-                </Private>
-              }
-            />
-
-            <Route
-              path="/admin/logs"
-              element={
-                <Private>
+                }
+              />
+              <Route
+                path="/admin/logs"
+                element={
                   <IfRole role={["admin", "moderator"]}>
                     <AdminLogs />
                   </IfRole>
-                </Private>
-              }
-            />
+                }
+              />
 
-            <Route path="/logout" element={<Private><Logout /></Private>} />
+              <Route path="/logout" element={<Logout />} />
+            </Route>
 
             {/* default */}
             <Route path="/" element={<Navigate to={authed ? "/profile" : "/login"} replace />} />
