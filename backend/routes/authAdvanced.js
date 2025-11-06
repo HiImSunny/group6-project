@@ -11,9 +11,11 @@ const auth = require('../middleware/auth');
 const { sendMail } = require('../lib/mailer');
 const { createResetToken } = require('../lib/resetToken');
 const cloudinary = require('../lib/cloudinary');
+const { forgotPwLimiter } = require('../middleware/rateLimiters');
+const { logActivity } = require('../middleware/logActivity');
 
 // POST /forgot-password
-router.post('/auth/forgot-password', async (req, res) => {
+router.post('/auth/forgot-password', forgotPwLimiter, logActivity('FORGOT_PW', (req)=>({ email: req.body?.email })), async (req, res) => {
   try {
     const { email } = req.body || {};
     if (!email) return res.status(400).json({ msg: 'Email is required' });
@@ -50,7 +52,8 @@ router.post('/auth/forgot-password', async (req, res) => {
 });
 
 // POST /reset-password
-router.post('/auth/reset-password', async (req, res) => {
+router.post('/auth/reset-password',
+  logActivity('RESET_PW', (req)=>({ email: req.body?.email })), async (req, res) => {
   try {
     const { email, token, newPassword } = req.body || {};
     if (!email || !token || !newPassword) {
@@ -86,7 +89,7 @@ const upload = multer({
 });
 
 // POST /upload-avatar
-router.post('/upload-avatar',
+router.post('/upload-avatar', logActivity('AVATAR_UPLOAD'),
   requireAuth,
   (req, res, next) => {
     upload.single('file')(req, res, (err) => {

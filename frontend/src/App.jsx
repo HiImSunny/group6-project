@@ -5,6 +5,7 @@ import Signup from "./pages/Signup";
 import Logout from "./pages/Logout";
 import Profile from "./pages/Profile";
 import AdminUsers from "./pages/AdminUsers";
+import AdminLogs from "./pages/AdminLogs";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import UploadAvatar from "./pages/UploadAvatar";
@@ -44,7 +45,9 @@ export default function App() {
                 {/* Chỉ admin hoặc moderator mới thấy */}
                 <IfRole role={["admin", "moderator"]}>
                   <a href="/admin/users">Quản lý người dùng</a>
+                  <a href="/admin/logs">Xem nhật ký</a>
                 </IfRole>
+
 
                 <a href="/logout">Đăng xuất</a>
               </>
@@ -71,6 +74,17 @@ export default function App() {
                 <Private>
                   <IfRole role={["admin", "moderator"]}>
                     <AdminUsers />
+                  </IfRole>
+                </Private>
+              }
+            />
+
+            <Route
+              path="/admin/logs"
+              element={
+                <Private>
+                  <IfRole role={["admin", "moderator"]}>
+                    <AdminLogs />
                   </IfRole>
                 </Private>
               }

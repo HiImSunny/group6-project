@@ -7,10 +7,17 @@ const mongoose = require('mongoose');
 
 const app = express();
 
-app.use(cors({ origin: 'http://localhost:4000', credentials: true }));
+app.use(cors({
+  origin: ['http://localhost:4000'], // chỉnh domain frontend
+  credentials: true,
+  exposedHeaders: ['RateLimit-Limit','RateLimit-Remaining','RateLimit-Reset','Retry-After']
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+app.set('trust proxy', 1);
+
 
 // Kết nối Mongo
 mongoose.connect(process.env.MONGO_URI)
@@ -25,6 +32,7 @@ app.use('/', require('./routes/auth'));
 app.use('/', require('./routes/authAdvanced'));
 app.use('/profile', require('./routes/profile'));
 app.use('/admin', require('./routes/admin'));
+app.use('/', require('./routes/adminLogs'));
 
 app.use((err, req, res, next) => {
   console.error('🔥 Global error:', err);
