@@ -3,9 +3,10 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const { requireAuth } = require('../middleware/auth');
+const { logActivity } = require('../middleware/logActivity');
 
 // Xem thông tin cá nhân
-router.get('/', requireAuth, async (req, res) => {
+router.get('/', logActivity('PROFILE_VIEW'), requireAuth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
     if (!user) return res.status(404).json({ msg: 'User not found' });
@@ -19,7 +20,7 @@ router.get('/', requireAuth, async (req, res) => {
 });
 
 // Cập nhật thông tin cá nhân
-router.put('/', requireAuth, async (req, res) => {
+router.put('/', logActivity('PROFILE_UPDATE'), requireAuth, async (req, res) => {
   const { name, email, phone } = req.body;
   const fields = {};
   if (name  != null) fields.name  = name;
