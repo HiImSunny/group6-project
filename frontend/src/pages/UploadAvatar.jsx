@@ -1,5 +1,8 @@
+// frontend/src/pages/UploadAvatar.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
+
+const API = process.env.REACT_APP_API_URL || 'http://localhost:3000'; // theo README backend cổng 3000
 
 export default function UploadAvatar() {
   const [file, setFile] = useState(null);
@@ -15,15 +18,24 @@ export default function UploadAvatar() {
     form.append('file', file);
 
     try {
-      const token = localStorage.getItem('token'); // JWT từ login
-      const res = await axios.post('http://localhost:3000/upload-avatar', form, {
-        headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` }
+      const token = localStorage.getItem('accessToken'); // đồng bộ key
+      const res = await axios.post(`${API}/upload-avatar`, form, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`
+        }
       });
       setMsg('Upload thành công!');
       setUrl(res.data.url);
+
+      // Cập nhật user cache nếu bạn có lưu trong localStorage
+      if (res.data?.user) {
+        localStorage.setItem('me', JSON.stringify(res.data.user));
+      }
     } catch (e) {
       console.error(e);
-      setMsg('Upload thất bại (kiểm tra token/định dạng ảnh).');
+      const detail = e?.response?.data?.detail || e.message;
+      setMsg(`Upload thất bại: ${detail}`);
     }
   };
 
@@ -31,7 +43,7 @@ export default function UploadAvatar() {
     <div>
       <h2>Upload Avatar</h2>
       <form onSubmit={onSubmit}>
-        <input type="file" accept="image/*" onChange={e=>setFile(e.target.files[0])} />
+        <input type="file" accept="image/*" onChange={e => setFile(e.target.files?.[0])} />
         <button type="submit">Tải lên</button>
       </form>
       {msg && <p>{msg}</p>}
