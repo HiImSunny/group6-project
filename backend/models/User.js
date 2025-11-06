@@ -8,7 +8,8 @@ const userSchema = new mongoose.Schema({
   role: { type: String, enum: ['user','moderator','admin'], default: 'user', index: true },
   resetPasswordTokenHash: { type: String },
   resetPasswordExpires:   { type: Date },
-  avatarUrl:              { type: String, default: '' },
+  avatarUrl: { type: String },
+  avatarPublicId: { type: String },
 },{timestamps:true});
 
 userSchema.pre('save', async function(next){
