@@ -19,7 +19,7 @@ export default function UploadAvatar() {
 
     try {
       const token = localStorage.getItem('accessToken'); // đồng bộ key
-      const res = await axios.post(`${API}/users/avatar`, form, {
+      const res = await axios.post(`${API}/upload-avatar`, form, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${token}`
