@@ -1,37 +1,32 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useState, useMemo } from 'react';
+import api from '../api/http';
 
 export default function ResetPassword() {
-  const [email, setEmail] = useState('');
-  const [token, setToken] = useState('');
-  const [newPassword, setNewPassword] = useState('');
+  const params = useMemo(() => new URLSearchParams(window.location.search), []);
+  const email = params.get('email') || '';
+  const token = params.get('token') || '';
+
+  const [pw, setPw] = useState('');
   const [msg, setMsg] = useState('');
 
-  useEffect(() => {
-    const p = new URLSearchParams(window.location.search);
-    setToken(p.get('token') || '');
-    setEmail(p.get('email') || '');
-  }, []);
-
-  const onSubmit = async (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     setMsg('');
     try {
-      await axios.post('http://localhost:3000/reset-password', { email, token, newPassword });
-      setMsg('Đổi mật khẩu thành công. Hãy đăng nhập lại.');
+      const res = await api.post('/auth/reset-password', { email, token, newPassword: pw });
+      setMsg(res?.data?.msg || 'Đổi mật khẩu thành công, hãy đăng nhập lại.');
     } catch (e) {
-      console.error(e);
-      setMsg('Token không hợp lệ hoặc đã hết hạn.');
+      const m = e?.response?.data?.msg || 'Đổi mật khẩu thất bại.';
+      setMsg(m);
     }
   };
 
   return (
     <div>
-      <h2>Đổi mật khẩu</h2>
-      <form onSubmit={onSubmit}>
-        <div>Email: <strong>{email || '(chưa có)'}</strong></div>
-        <label>Mật khẩu mới</label>
-        <input type="password" value={newPassword} onChange={e=>setNewPassword(e.target.value)} required />
+      <h2>Đặt lại mật khẩu</h2>
+      <p>Email: {email || '(không có)'} </p>
+      <form onSubmit={submit}>
+        <input type="password" value={pw} onChange={e=>setPw(e.target.value)} placeholder="Mật khẩu mới" required />
         <button type="submit">Đổi mật khẩu</button>
       </form>
       {msg && <p>{msg}</p>}
