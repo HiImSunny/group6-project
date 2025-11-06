@@ -13,7 +13,7 @@ const { createResetToken } = require('../lib/resetToken');
 const cloudinary = require('../lib/cloudinary');
 
 // POST /forgot-password
-router.post('/forgot-password', async (req, res) => {
+router.post('/auth/forgot-password', async (req, res) => {
   try {
     const { email } = req.body || {};
     if (!email) return res.status(400).json({ msg: 'Email is required' });
@@ -27,8 +27,9 @@ router.post('/forgot-password', async (req, res) => {
     user.resetPasswordExpires   = new Date(Date.now() + 15*60*1000); // 15 phút
     await user.save();
 
-    const origin = req.headers.origin || 'http://localhost:4000';
+    const origin = process.env.FRONTEND_URL || 'http://localhost:4000';
     const resetUrl = `${origin}/reset-password?token=${token}&email=${encodeURIComponent(email)}`;
+
 
     await sendMail({
       to: email,
@@ -49,7 +50,7 @@ router.post('/forgot-password', async (req, res) => {
 });
 
 // POST /reset-password
-router.post('/reset-password', async (req, res) => {
+router.post('/auth/reset-password', async (req, res) => {
   try {
     const { email, token, newPassword } = req.body || {};
     if (!email || !token || !newPassword) {
