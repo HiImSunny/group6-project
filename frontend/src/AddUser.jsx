@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
 
+const API_URL = process.env.REACT_APP_API_URL;
+
 function AddUser({ fetchUsers }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -21,7 +23,7 @@ function AddUser({ fetchUsers }) {
     }
 
     try {
-      await axios.post("http://localhost:3000/users", { name, email });
+      await axios.post(`${API_URL}/users`, { name, email });
       alert("Thêm người dùng thành công!");
       setName("");
       setEmail("");

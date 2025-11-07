@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const API = process.env.REACT_APP_API_URL || 'http://localhost:3000'; // theo README backend cổng 3000
+const API = process.env.REACT_APP_API_URL; // theo README backend cổng 3000
 
 export default function UploadAvatar() {
   const [file, setFile] = useState(null);

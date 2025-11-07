@@ -1,8 +1,10 @@
 // frontend/src/lib/api.js
 import axios from 'axios';
 
+const API_URL = process.env.REACT_APP_API_URL;
+
 const api = axios.create({
-  baseURL: "http://localhost:3000", // khớp README
+  baseURL: API_URL,
   withCredentials: true, // nếu backend dùng cookie, còn JWT thuần thì không cần
 });
 
@@ -43,7 +45,7 @@ api.interceptors.response.use(
         if (!refreshToken) throw new Error('No refresh token');
 
         const { data } = await axios.post(
-          (import.meta.env.VITE_API_BASE || 'http://localhost:3000') + '/refresh',
+          (import.meta.env.VITE_API_BASE || API_URL) + '/refresh',
           { refreshToken }
         );
         const newAccess = data?.accessToken;

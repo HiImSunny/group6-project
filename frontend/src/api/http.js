@@ -3,8 +3,10 @@ import axios from 'axios';
 
 console.log("🔥 http.js loaded");
 
+const API_URL = process.env.REACT_APP_API_URL;
+
 const http = axios.create({
-  baseURL: "http://localhost:3000", // đổi nếu backend port khác
+  baseURL: API_URL,
 });
 
 http.interceptors.request.use(config => {
@@ -26,7 +28,7 @@ http.interceptors.response.use(
       console.log('[http] 401 received for', original.url);
       if (!refreshing) {
         console.log('[http] starting refresh token request...');
-        refreshing = axios.post(`http://localhost:3000/refresh`, {
+        refreshing = axios.post(`${API_URL}/refresh`, {
           refreshToken: localStorage.getItem('refreshToken')
         }).then(res => {
           console.log('[http] refresh success');

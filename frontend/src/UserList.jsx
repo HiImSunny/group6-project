@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
+const API_URL = process.env.REACT_APP_API_URL;
+
 function UserList() {
   const [users, setUsers] = useState([]);
   const [editingUser, setEditingUser] = useState(null);
@@ -9,7 +11,7 @@ function UserList() {
 
   // Lấy danh sách user từ backend
   useEffect(() => {
-    axios.get("http://localhost:3000/users")
+    axios.get(`${API_URL}/users`)
       .then(res => setUsers(res.data))
       .catch(err => console.error("Lỗi tải dữ liệu:", err));
   }, []);
@@ -17,7 +19,7 @@ function UserList() {
   // Xử lý XÓA user
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:3000/users/${id}`);
+      await axios.delete(`${API_URL}/users/${id}`);
       setUsers(users.filter(user => user._id !== id)); // cập nhật lại danh sách
     } catch (err) {
       console.error("Lỗi khi xóa:", err);
@@ -36,7 +38,7 @@ function UserList() {
     if (!editingUser) return;
 
     try {
-      await axios.put(`http://localhost:3000/users/${editingUser._id}`, {
+      await axios.put(`${API_URL}/users/${editingUser._id}`, {
         name: editName,
         email: editEmail,
       });
