@@ -8,7 +8,7 @@ const mongoose = require('mongoose');
 const app = express();
 
 app.use(cors({
-  origin: ['http://localhost:4000'], // chỉnh domain frontend
+  origin: ['*'], // chỉnh domain frontend
   credentials: true,
   exposedHeaders: ['RateLimit-Limit','RateLimit-Remaining','RateLimit-Reset','Retry-After']
 }));
