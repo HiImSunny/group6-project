@@ -8,9 +8,13 @@ const mongoose = require('mongoose');
 const app = express();
 
 app.use(cors({
-  origin: ['*'], // chỉnh domain frontend
+    origin: [
+    'https://group6-project-delta.vercel.app',  // domain frontend trên Vercel
+    'http://localhost:3000'                     // cho phép cả local dev
+  ],
   credentials: true,
-  exposedHeaders: ['RateLimit-Limit','RateLimit-Remaining','RateLimit-Reset','Retry-After']
+  exposedHeaders: ['RateLimit-Limit','RateLimit-Remaining','RateLimit-Reset','Retry-After'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
