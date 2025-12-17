@@ -31,7 +31,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 /* ===== Mongo ===== */
-mongoose.connect(process.env.MONGO_URI)
+mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('✅ Mongo connected'))
   .catch(err => {
     console.error('❌ Mongo error:', err.message);
